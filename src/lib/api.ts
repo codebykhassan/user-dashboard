@@ -9,7 +9,7 @@ export async function getUsers(): Promise<User[]> {
         });
 
         if (!response.ok) {
-            throw new Error('Failed to fetch users');
+            throw new Error(`Failed to fetch users: ${response.status} ${response.statusText}`);
         }
 
         return response.json();
@@ -26,13 +26,29 @@ export async function getUser(id: string): Promise<User> {
         });
 
         if (!response.ok) {
-            throw new Error('Failed to fetch user');
+            if (response.status === 404) {
+                throw new Error(`User with ID ${id} not found.`);
+            }
+            throw new Error(`Failed to fetch user: ${response.status} ${response.statusText}`);
         }
 
-        return response.json();
+        const user = await response.json();
+
+        
+        if (!user || !user.id) {
+            throw new Error(`User with ID ${id} not found.`);
+        }
+
+        return user;
     } catch (error) {
         console.error('Error fetching user:', error);
-        throw new Error('Failed to load user');
+
+        
+        if (error instanceof Error && error.message.includes('not found')) {
+            throw error;
+        }
+
+        throw new Error(`Failed to load user with ID ${id}`);
     }
 }
 
@@ -47,7 +63,7 @@ export async function createUser(userData: CreateUserData): Promise<User> {
         });
 
         if (!response.ok) {
-            throw new Error('Failed to create user');
+            throw new Error(`Failed to create user: ${response.status} ${response.statusText}`);
         }
 
         return response.json();

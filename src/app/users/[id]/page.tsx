@@ -1,6 +1,7 @@
 import { getUser } from '@/lib/api';
 import { Mail, Phone, Globe, MapPin, Building } from 'lucide-react';
 import Link from 'next/link';
+import { notFound } from 'next/navigation';
 
 export default async function UserDetailPage({
     params,
@@ -8,7 +9,20 @@ export default async function UserDetailPage({
     params: Promise<{ id: string }>;
 }) {
     const { id } = await params;
-    const user = await getUser(id);
+
+    let user;
+
+    try {
+        user = await getUser(id);
+    } catch (error) {
+        // If user not found, show 404 page
+        if (error instanceof Error && error.message.includes('not found')) {
+            notFound();
+        }
+
+        // For other errors, re-throw to show error page
+        throw error;
+    }
 
     return (
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
@@ -21,6 +35,7 @@ export default async function UserDetailPage({
                     ← Back to Users
                 </Link>
             </div>
+
             <div className="grid grid-2">
                 <div className="card">
                     <h2 className="text-large mb-2">Contact Information</h2>
@@ -37,6 +52,7 @@ export default async function UserDetailPage({
                         <span>{user.website}</span>
                     </div>
                 </div>
+
                 <div className="card">
                     <h2 className="text-large mb-2">Address</h2>
                     <div className="user-info">
@@ -51,6 +67,7 @@ export default async function UserDetailPage({
                         </div>
                     </div>
                 </div>
+
                 <div className="card" style={{ gridColumn: '1 / -1' }}>
                     <h2 className="text-large mb-2">Company</h2>
                     <div className="user-info">
